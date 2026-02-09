@@ -1,0 +1,18 @@
+.gradient-bg {
+  background: radial-gradient(circle at 20% 20%, rgba(106, 227, 217, 0.25), transparent 25%),
+    radial-gradient(circle at 80% 10%, rgba(109, 133, 255, 0.2), transparent 25%),
+    radial-gradient(circle at 50% 80%, rgba(255, 117, 193, 0.18), transparent 20%),
+    #0b1021;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+}
+
+.card-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+  background-size: 32px 32px;
+}
