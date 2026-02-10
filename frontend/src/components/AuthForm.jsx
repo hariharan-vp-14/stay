@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function AuthForm({ role = "user", mode = "register" }) {
   const isRegister = mode === "register";
+  const isLogin = mode === "login";
 
   const [form, setForm] = useState({
     name: "",
@@ -72,31 +73,32 @@ export default function AuthForm({ role = "user", mode = "register" }) {
   };
 
   return (
-    <div className="glass p-6 rounded-2xl border border-white/10 space-y-4">
-      <div>
-        <p className="text-xs uppercase tracking-[0.25em] text-accent">
-          {role} {mode}
-        </p>
-        <h2 className="text-xl text-white font-semibold">
-          {isRegister ? "Create an account" : "Login to continue"}
+    <div className="glass p-6 md:p-8 rounded-2xl border border-white/10 space-y-5 shadow-xl">
+      <div className="text-center space-y-2">
+        <span className="inline-block px-3 py-1 text-xs uppercase tracking-[0.2em] text-accent bg-accent/10 rounded-full border border-accent/20">
+          {role === "owner" ? "Property Owner" : "User"} {isRegister ? "Registration" : "Login"}
+        </span>
+        <h2 className="text-2xl text-white font-semibold">
+          {isRegister ? "Create your account" : "Welcome back"}
         </h2>
         <p className="text-sm text-mist/70">
           {isRegister
-            ? "Fill your details to get started."
-            : "Welcome back."}
+            ? "Join thousands of users finding their perfect stay"
+            : "Sign in to continue to your dashboard"}
         </p>
       </div>
 
       <form className="space-y-4" onSubmit={onSubmit}>
         {isRegister && (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm text-mist/80">
               Full name
               <input
-                className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white outline-none"
+                className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all placeholder:text-mist/40"
                 name="name"
                 value={form.name}
                 onChange={onChange}
+                placeholder="Enter your full name"
                 required
               />
             </label>
@@ -104,7 +106,7 @@ export default function AuthForm({ role = "user", mode = "register" }) {
             <label className="text-sm text-mist/80">
               Contact number
               <input
-                className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white outline-none"
+                className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all placeholder:text-mist/40"
                 name="contactNumber"
                 value={form.contactNumber}
                 onChange={onChange}
@@ -116,13 +118,14 @@ export default function AuthForm({ role = "user", mode = "register" }) {
         )}
 
         <label className="text-sm text-mist/80 block">
-          Email
+          Email address
           <input
-            className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white outline-none"
+            className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-white outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all placeholder:text-mist/40"
             name="email"
             type="email"
             value={form.email}
             onChange={onChange}
+            placeholder="you@example.com"
             required
           />
         </label>
@@ -130,7 +133,7 @@ export default function AuthForm({ role = "user", mode = "register" }) {
         <label className="text-sm text-mist/80 block">
           Password
           <input
-            className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white outline-none"
+            className="mt-1 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
             name="password"
             type="password"
             value={form.password}
@@ -140,17 +143,58 @@ export default function AuthForm({ role = "user", mode = "register" }) {
           />
         </label>
 
+        {/* Forgot Password Link - Only show in login mode */}
+        {isLogin && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="text-sm text-accent hover:text-accent/80 transition-colors hover:underline"
+              onClick={() => {
+                // For now, show an alert. You can implement a forgot password modal or page later.
+                alert("Forgot password feature coming soon! Please contact support for password reset.");
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-gradient-to-r from-accent to-accentDark text-night font-semibold py-2 disabled:opacity-60"
+          className="w-full rounded-lg bg-gradient-to-r from-accent to-accentDark text-night font-semibold py-2.5 disabled:opacity-60 hover:shadow-lg hover:shadow-accent/20 transition-all duration-200"
         >
-          {loading ? "Please wait…" : isRegister ? "Sign up" : "Login"}
+          {loading ? "Please wait…" : isRegister ? "Create Account" : "Sign In"}
         </button>
       </form>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
-      {success && <p className="text-sm text-green-400">{success}</p>}
+      {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+      {success && <p className="text-sm text-green-400 text-center">{success}</p>}
+
+      {/* Toggle between Login and Register */}
+      <div className="pt-4 border-t border-white/10 text-center">
+        {isRegister ? (
+          <p className="text-sm text-mist/70">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-accent font-medium hover:text-accent/80 hover:underline transition-colors"
+            >
+              Sign in
+            </Link>
+          </p>
+        ) : (
+          <p className="text-sm text-mist/70">
+            Don't have an account?{" "}
+            <Link
+              to={role === "owner" ? "/register/owner" : "/register/user"}
+              className="text-accent font-medium hover:text-accent/80 hover:underline transition-colors"
+            >
+              Create one
+            </Link>
+          </p>
+        )}
+      </div>
     </div>
   );
 }
