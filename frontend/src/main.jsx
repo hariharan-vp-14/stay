@@ -7,7 +7,7 @@ import './index.css';
 import { getGoogleClientId } from './lib/api';
 import { AuthProvider } from './context/AuthContext';
 
-const clientId = getGoogleClientId(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);
+const clientId = getGoogleClientId();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

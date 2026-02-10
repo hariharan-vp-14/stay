@@ -7,6 +7,7 @@ const { authUser } = require('../middleware/auth.middleware');
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/google', googleAuth);
+router.post('/google-login', googleAuth);  // Alias for frontend compatibility
 
 // Protected routes
 router.get('/profile', authUser, getUserProfile);

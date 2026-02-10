@@ -1,7 +1,6 @@
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -15,18 +14,23 @@ export default function GoogleButton({ role = "user" }) {
     setError("");
     setStatus("Authenticating with Google…");
 
-    try {
-      // ✅ Decode Google ID token
-      const decoded = jwtDecode(credentialResponse.credential);
+    // Debug: Log credential response
+    console.log("Google credential received:", credentialResponse.credential ? "Yes" : "No");
 
+    if (!credentialResponse.credential) {
+      setError("No credential received from Google");
+      setStatus("");
+      return;
+    }
+
+    try {
+      // ✅ Send the raw Google ID token to backend for verification
       const payload = {
-        name: decoded.name,
-        email: decoded.email,
-        googleId: decoded.sub,
+        idToken: credentialResponse.credential,
       };
 
-      // ✅ Correct backend endpoint (matches /api/{role}s/google)
-      const endpoint = `/${role}s/google`;
+      // ✅ Correct backend endpoint
+      const endpoint = `/${role}s/google-login`;
 
       const data = await apiRequest(endpoint, {
         method: "POST",
@@ -45,11 +49,12 @@ export default function GoogleButton({ role = "user" }) {
 
       setTimeout(() => navigate("/dashboard"), 500);
     } catch (err) {
-      setError(
+      console.error("Google login error:", err);
+      const errorMessage = 
         err?.response?.data?.message ||
-          err.message ||
-          "Google login failed"
-      );
+        err?.message ||
+        "Google login failed";
+      setError(errorMessage);
       setStatus("");
     }
   };
