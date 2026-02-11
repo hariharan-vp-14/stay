@@ -175,3 +175,28 @@ module.exports.googleAuth = async (req, res, next) => {
     return res.status(401).json({ message: 'Google authentication failed', error: err.message });
   }
 };
+
+// PUT /api/owners/profile — update owner profile
+module.exports.updateOwnerProfile = async (req, res) => {
+  try {
+    const owner = await ownerModel.findById(req.owner._id);
+    if (!owner) return res.status(404).json({ message: 'Owner not found' });
+
+    const { name, contactNumber, password } = req.body;
+
+    if (name) owner.name = name;
+    if (contactNumber) owner.contactNumber = contactNumber;
+    if (password) {
+      owner.password = await ownerModel.hashPassword(password);
+    }
+
+    await owner.save();
+
+    return res.json({
+      success: true,
+      owner: { name: owner.name, email: owner.email, contactNumber: owner.contactNumber },
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+};

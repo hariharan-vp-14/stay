@@ -6,7 +6,19 @@ import OwnerRegister from './pages/OwnerRegister';
 import RegisterLanding from './pages/RegisterLanding';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import ProfileEdit from './pages/ProfileEdit';
+import SearchPage from './pages/SearchPage';
+import PropertyDetail from './pages/PropertyDetail';
+import AddProperty from './pages/AddProperty';
+import SavedProperties from './pages/SavedProperties';
+import UserInquiries from './pages/UserInquiries';
+import OwnerInquiries from './pages/OwnerInquiries';
+import MyProperties from './pages/MyProperties';
+import AnalyticsPage from './pages/AnalyticsPage';
+import MyReviews from './pages/MyReviews';
 import ProtectedRoute from './components/ProtectedRoute';
+import { RedirectIfAuth } from './components/ProtectedRoute';
 import './App.css';
 import { FadeIn } from './components/FadeIn';
 
@@ -81,19 +93,30 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/register" element={<RegisterLanding />} />
-      <Route path="/register/user" element={<UserRegister />} />
-      <Route path="/register/owner" element={<OwnerRegister />} />
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/dashboard"
-        element={(
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        )}
-      />
+      <Route path="/" element={<RedirectIfAuth><Home /></RedirectIfAuth>} />
+      <Route path="/register" element={<RedirectIfAuth><RegisterLanding /></RedirectIfAuth>} />
+      <Route path="/register/user" element={<RedirectIfAuth><UserRegister /></RedirectIfAuth>} />
+      <Route path="/register/owner" element={<RedirectIfAuth><OwnerRegister /></RedirectIfAuth>} />
+      <Route path="/login" element={<RedirectIfAuth><Login /></RedirectIfAuth>} />
+
+      {/* Protected — shared */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
+      <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
+
+      {/* Protected — user */}
+      <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+      <Route path="/saved" element={<ProtectedRoute><SavedProperties /></ProtectedRoute>} />
+      <Route path="/inquiries" element={<ProtectedRoute><UserInquiries /></ProtectedRoute>} />
+      <Route path="/my-reviews" element={<ProtectedRoute><MyReviews /></ProtectedRoute>} />
+
+      {/* Protected — owner */}
+      <Route path="/owner/add-property" element={<ProtectedRoute><AddProperty /></ProtectedRoute>} />
+      <Route path="/owner/edit-property/:id" element={<ProtectedRoute><AddProperty /></ProtectedRoute>} />
+      <Route path="/owner/properties" element={<ProtectedRoute><MyProperties /></ProtectedRoute>} />
+      <Route path="/owner/inquiries" element={<ProtectedRoute><OwnerInquiries /></ProtectedRoute>} />
+      <Route path="/owner/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -1,25 +1,81 @@
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../lib/api';
 import { motion } from 'framer-motion';
+import UserDashboard from './UserDashboard';
+import OwnerDashboard from './OwnerDashboard';
 
 export default function Dashboard() {
-  const { profile, role } = useAuth();
-  const name = profile?.name || 'Guest';
+  const { token, role: localRole, profile: localProfile, login, logout } = useAuth();
+  const navigate = useNavigate();
+  const verified = useRef(false);
 
-  return (
-    <div className="max-w-4xl mx-auto py-10 space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="glass p-6 rounded-2xl border border-white/10">
-        <p className="text-sm uppercase tracking-[0.25em] text-accent">Dashboard</p>
-        <h1 className="text-3xl text-white font-semibold mt-2">Welcome, {name}</h1>
-        <p className="text-mist/80 mt-2">You are signed in as {role || 'user'}.</p>
-      </motion.div>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }} className="glass p-6 rounded-2xl border border-white/10 space-y-3">
-        <h3 className="text-white font-semibold">Next: wire real data</h3>
-        <ul className="list-disc list-inside text-mist/80 text-sm space-y-1">
-          <li>Call backend profile endpoints to refresh user/owner data.</li>
-          <li>Show saved properties, leads, or recent searches.</li>
-          <li>Add logout that also hits backend logout if needed.</li>
-        </ul>
-      </motion.div>
-    </div>
-  );
+  // Use cached data immediately if available, only show loading on first-ever visit
+  const hasCached = !!(localRole && localProfile);
+  const [loading, setLoading] = useState(!hasCached);
+  const [role, setRole] = useState(localRole || '');
+  const [profile, setProfile] = useState(localProfile || null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    // Skip duplicate calls (React StrictMode)
+    if (verified.current) return;
+    verified.current = true;
+
+    async function verifySession() {
+      try {
+        const data = await apiRequest('/auth/me', { token });
+        setRole(data.role);
+        setProfile(data.user);
+        login(data.role, { token, profile: data.user });
+      } catch {
+        // Only logout if we had no cached data (genuine invalid token)
+        if (!hasCached) {
+          setError('Session expired. Redirecting to login…');
+          logout();
+          setTimeout(() => navigate('/login', { replace: true }), 1200);
+        }
+        // If we had cached data, silently keep the user on the dashboard —
+        // the next meaningful API call will surface the real error.
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    verifySession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-night flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-mist/70 text-lg"
+        >
+          Loading dashboard…
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-night flex items-center justify-center">
+        <p className="text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (role === 'owner') {
+    return <OwnerDashboard profile={profile} />;
+  }
+
+  return <UserDashboard profile={profile} />;
 }

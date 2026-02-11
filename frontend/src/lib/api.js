@@ -4,6 +4,10 @@ import axios from "axios";
 const API_BASE =
   import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
 
+// Server root (without /api) — used for static assets like uploaded images
+const SERVER_BASE =
+  import.meta.env.VITE_SERVER_BASE || "http://localhost:5000";
+
 export const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
@@ -31,4 +35,15 @@ export async function apiRequest(
 
 export function getGoogleClientId() {
   return import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+}
+
+/**
+ * Convert a stored image path (e.g. "/uploads/properties/img.jpg")
+ * into a full URL pointing at the backend static server.
+ * Already-absolute URLs (http/https) are returned as-is.
+ */
+export function getImageUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${SERVER_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
 }

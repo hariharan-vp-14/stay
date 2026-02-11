@@ -37,7 +37,11 @@ export function AuthProvider({ children }) {
     setAuth({ token: '', profile: null, role: '' });
   };
 
-  const value = useMemo(() => ({ ...auth, login, logout }), [auth]);
+  const setProfile = (profile) => {
+    setAuth((prev) => ({ ...prev, profile }));
+  };
+
+  const value = useMemo(() => ({ ...auth, login, logout, setProfile }), [auth]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

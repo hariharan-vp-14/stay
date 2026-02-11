@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
   },
+  savedProperties: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Property',
+    },
+  ],
 }, {
   timestamps: true,
 });
@@ -48,7 +54,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 // Generate JWT auth token
 userSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
+  return jwt.sign({ _id: this._id, role: 'user' }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
 };
