@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Building2, Menu, X, LogOut, User, ChevronDown,
+  Menu, X, LogOut, User, ChevronDown,
 } from 'lucide-react';
+import logo from '../assets/stay-high-resolution-logo.png';
 import { useAuth } from '../context/AuthContext';
 
 export default function DashboardLayout({ children, navItems = [] }) {
@@ -32,9 +33,7 @@ export default function DashboardLayout({ children, navItems = [] }) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-        <div className="h-9 w-9 rounded-lg bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
-          <Building2 size={18} />
-        </div>
+        <img src={logo} alt="Stay" className="h-9 w-9 rounded-lg object-cover" />
         <span className="text-white font-semibold text-lg tracking-tight">Stay</span>
       </div>
 
@@ -144,7 +143,7 @@ export default function DashboardLayout({ children, navItems = [] }) {
                       <div className="min-w-0">
                         <p className="text-white text-sm font-medium truncate">{name}</p>
                         <p className="text-mist/50 text-xs truncate">{email}</p>
-                        <p className="text-accent/70 text-[10px] uppercase tracking-wider mt-0.5">{role}</p>
+                        <p className="text-accent/70 text-[10px] uppercase tracking-wider mt-0.5">{Array.isArray(role) ? role.join(', ') : role}</p>
                       </div>
                     </div>
                   </div>

@@ -11,6 +11,8 @@ const inquiryRoutes = require('./routes/inquiry.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const reviewRoutes = require('./routes/review.routes');
+const adminRoutes = require('./routes/admin.routes');
+const errorHandler = require('./middleware/error.middleware');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -43,5 +45,14 @@ app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/owner', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route not found: ${req.originalUrl}` });
+});
+
+// Centralized error handler (must be last middleware)
+app.use(errorHandler);
 
 module.exports = app;

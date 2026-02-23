@@ -5,9 +5,17 @@ module.exports.createProperty = async (req, res) => {
   try {
     const {
       title, type, price, deposit, gender,
-      amenities, images, location, address, city,
+      amenities, images, location, lat, lng, address, city,
       description, contactNumber, googleMapLink,
     } = req.body;
+
+    // Build GeoJSON location: accept either { location } object or flat lat/lng
+    let geoLocation = { type: 'Point', coordinates: [0, 0] };
+    if (location && location.coordinates) {
+      geoLocation = location;
+    } else if (lat !== undefined && lng !== undefined) {
+      geoLocation = { type: 'Point', coordinates: [Number(lng), Number(lat)] };
+    }
 
     const property = await Property.create({
       title,
@@ -17,7 +25,7 @@ module.exports.createProperty = async (req, res) => {
       gender,
       amenities: amenities || [],
       images: images || [],
-      location: location || { type: 'Point', coordinates: [0, 0] },
+      location: geoLocation,
       address,
       city,
       description,
@@ -41,7 +49,7 @@ module.exports.getProperties = async (req, res) => {
       sort = '-createdAt',
     } = req.query;
 
-    const filter = { available: true };
+    const filter = { available: true, status: 'approved' };
 
     if (type) filter.type = type;
     if (city) filter.city = city.toLowerCase();
@@ -102,6 +110,7 @@ module.exports.getNearbyProperties = async (req, res) => {
 
     const filter = {
       available: true,
+      status: 'approved',
       location: {
         $geoWithin: {
           $centerSphere: [

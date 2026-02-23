@@ -10,11 +10,11 @@ export default {
       colors: {
         night: '#0B1021',
         mist: '#e8ecf3',
-        accent: '#6AE3D9',
-        accentDark: '#3DB6AD',
+        accent: '#89CFF0',
+        accentDark: '#5BA3D9',
       },
       boxShadow: {
-        glow: '0 20px 60px rgba(106, 227, 217, 0.25)',
+        glow: '0 20px 60px rgba(137, 207, 240, 0.25)',
       },
       backgroundImage: {
         grid: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)',

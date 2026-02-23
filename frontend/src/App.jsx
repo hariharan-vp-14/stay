@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Routes, Route, Link } from 'react-router-dom';
-import { Building2, LogIn } from 'lucide-react';
+import { LogIn, ShieldCheck } from 'lucide-react';
+import logo from './assets/stay-high-resolution-logo.png';
 import UserRegister from './pages/UserRegister';
 import OwnerRegister from './pages/OwnerRegister';
 import RegisterLanding from './pages/RegisterLanding';
@@ -17,6 +18,11 @@ import OwnerInquiries from './pages/OwnerInquiries';
 import MyProperties from './pages/MyProperties';
 import AnalyticsPage from './pages/AnalyticsPage';
 import MyReviews from './pages/MyReviews';
+import AdminLogin from './pages/AdminLogin';
+import AdminRegister from './pages/AdminRegister';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminForgotPassword from './pages/AdminForgotPassword';
+import AdminResetPassword from './pages/AdminResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import { RedirectIfAuth } from './components/ProtectedRoute';
 import './App.css';
@@ -68,13 +74,18 @@ const Header = () => {
   return (
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent font-bold">
-          <Building2 size={18} />
-        </div>
+        <img src={logo} alt="Stay" className="h-10 w-10 rounded-full object-cover" />
         <div>
           <p className="text-white font-semibold">Stay</p>
         </div>
       </div>
+      <Link
+        to="/admin/login"
+        className="p-2 rounded-lg hover:bg-white/10 text-mist/40 hover:text-red-400 transition-colors"
+        title="Admin Login"
+      >
+        <ShieldCheck size={18} />
+      </Link>
     </header>
   );
 };
@@ -117,6 +128,20 @@ function App() {
       <Route path="/owner/properties" element={<ProtectedRoute><MyProperties /></ProtectedRoute>} />
       <Route path="/owner/inquiries" element={<ProtectedRoute><OwnerInquiries /></ProtectedRoute>} />
       <Route path="/owner/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+
+      {/* Admin — public auth */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/register" element={<AdminRegister />} />
+      <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+      <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />
+
+      {/* Admin — protected */}
+      <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/pending" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/properties" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/owners" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
     </Routes>
   );
 }

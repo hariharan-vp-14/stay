@@ -31,6 +31,10 @@ const ownerSchema = new mongoose.Schema({
   googleId: {
     type: String,
   },
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });
@@ -45,7 +49,7 @@ ownerSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 ownerSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ _id: this._id, role: 'owner' }, process.env.JWT_SECRET, {
+  return jwt.sign({ _id: this._id, roles: ['owner'] }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
 };

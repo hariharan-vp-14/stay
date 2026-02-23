@@ -53,7 +53,9 @@ export default function AuthForm({ role = "user", mode = "register" }) {
         throw new Error("Authentication token not received");
       }
 
-      login(role, { token, profile });
+      // Use roles from response if available, else fallback to single role prop
+      const roles = profile?.roles || [role];
+      login(roles, { token, profile });
 
       setSuccess("Success! Redirecting…");
 

@@ -1,7 +1,7 @@
 .gradient-bg {
-  background: radial-gradient(circle at 20% 20%, rgba(106, 227, 217, 0.25), transparent 25%),
-    radial-gradient(circle at 80% 10%, rgba(109, 133, 255, 0.2), transparent 25%),
-    radial-gradient(circle at 50% 80%, rgba(255, 117, 193, 0.18), transparent 20%),
+  background: radial-gradient(circle at 20% 20%, rgba(137, 207, 240, 0.25), transparent 25%),
+    radial-gradient(circle at 80% 10%, rgba(91, 163, 217, 0.2), transparent 25%),
+    radial-gradient(circle at 50% 80%, rgba(137, 207, 240, 0.12), transparent 20%),
     #0b1021;
 }
 

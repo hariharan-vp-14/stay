@@ -30,7 +30,7 @@ export default function GoogleButton({ role = "user" }) {
       };
 
       // ✅ Correct backend endpoint
-      const endpoint = `/${role}s/google-login`;
+      const endpoint = role === 'admin' ? '/admin/google-login' : `/${role}s/google-login`;
 
       const data = await apiRequest(endpoint, {
         method: "POST",
@@ -44,10 +44,13 @@ export default function GoogleButton({ role = "user" }) {
         throw new Error("Token not received from server");
       }
 
-      login(role, { token, profile });
+      // Use roles from backend response if available, else fallback to prop
+      const roles = profile?.roles || [role];
+      login(roles, { token, profile });
       setStatus("Google login successful. Redirecting…");
 
-      setTimeout(() => navigate("/dashboard"), 500);
+      const redirectPath = role === 'admin' ? '/admin/dashboard' : '/dashboard';
+      setTimeout(() => navigate(redirectPath), 500);
     } catch (err) {
       console.error("Google login error:", err);
       const errorMessage = 

@@ -73,6 +73,12 @@ export default function Dashboard() {
     );
   }
 
+  if (role === 'admin') {
+    // Redirect admin to their dashboard
+    navigate('/admin/dashboard', { replace: true });
+    return null;
+  }
+
   if (role === 'owner') {
     return <OwnerDashboard profile={profile} />;
   }

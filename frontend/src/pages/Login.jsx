@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 import GoogleButton from '../components/GoogleButton';
-import { LogIn, User, Building2 } from 'lucide-react';
+import { LogIn, User, Building2, ShieldCheck } from 'lucide-react';
 
 export default function Login() {
   const [role, setRole] = useState('user');
@@ -60,6 +61,17 @@ export default function Login() {
           </svg>
           Secured with SSL encryption
         </p>
+
+        {/* Admin Login Link */}
+        <div className="text-center">
+          <Link
+            to="/admin/login"
+            className="inline-flex items-center gap-1.5 text-xs text-mist/40 hover:text-red-400 transition-colors"
+          >
+            <ShieldCheck size={12} />
+            Admin Login
+          </Link>
+        </div>
       </div>
     </div>
   );
