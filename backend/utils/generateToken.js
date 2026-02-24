@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
+const config = require('../config');
 
 const generateToken = (userId, roles = ['user']) => {
-  // Support both array and string for backward compat
   const rolesArray = Array.isArray(roles) ? roles : [roles];
-  return jwt.sign({ _id: userId, roles: rolesArray }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+  return jwt.sign({ _id: userId, roles: rolesArray }, config.JWT_SECRET, {
+    expiresIn: config.JWT_EXPIRES_IN,
   });
 };
 

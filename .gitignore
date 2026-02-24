@@ -24,3 +24,7 @@ Thumbs.db
 
 # Uber folder (separate project)
 uber/
+
+# Uploaded files (user content, not source code)
+backend/uploads/properties/*
+!backend/uploads/properties/.gitkeep

@@ -18,11 +18,16 @@ router.post(
   },
   (req, res) => {
     try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ success: false, message: 'No files were uploaded' });
+      }
       const urls = req.files.map(
         (f) => `/uploads/properties/${f.filename}`
       );
+      console.log('[upload] saved', urls.length, 'file(s):', urls);
       return res.status(200).json({ success: true, urls });
     } catch (err) {
+      console.error('[upload] error:', err);
       return res.status(500).json({ success: false, message: err.message });
     }
   }

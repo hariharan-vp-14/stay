@@ -18,12 +18,12 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (_req, file, cb) => {
-  const allowedExt = /\.(jpe?g|png|webp)$/i;
+  const allowedExt = /\.(jpe?g|jfif|png|webp)$/i;
   const allowedMime = /^image\/(jpeg|jpg|pjpeg|png|webp)$/i;
   const extOk = allowedExt.test(path.extname(file.originalname));
   const mimeOk = allowedMime.test(file.mimetype);
   if (extOk || mimeOk) return cb(null, true);
-  cb(new Error('Only .jpg, .jpeg, .png and .webp images are allowed'));
+  cb(new Error('Only .jpg, .jpeg, .jfif, .png and .webp images are allowed'));
 };
 
 const upload = multer({

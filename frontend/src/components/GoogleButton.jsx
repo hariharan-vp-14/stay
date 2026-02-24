@@ -24,9 +24,9 @@ export default function GoogleButton({ role = "user" }) {
     }
 
     try {
-      // ✅ Send the raw Google ID token to backend for verification
+      // ✅ Send the Google credential (ID token) to backend for verification
       const payload = {
-        idToken: credentialResponse.credential,
+        token: credentialResponse.credential,
       };
 
       // ✅ Correct backend endpoint

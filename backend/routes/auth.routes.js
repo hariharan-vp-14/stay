@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('../config/passport');
+const config = require('../config');
 const { protect } = require('../middleware/auth.middleware');
+const { authLimiter } = require('../middleware/security.middleware');
+const generateToken = require('../utils/generateToken');
 
-// GET /api/auth/me — returns logged-in user/owner/admin with roles
+// ── GET /api/auth/me — returns logged-in user with roles ──
 router.get('/me', protect, (req, res) => {
   return res.status(200).json({
     success: true,
-    role: req.role,                    // backward compat (highest priority role)
-    roles: req.roles || [req.role],    // new: full roles array
+    role: req.role,
+    roles: req.roles || [req.role],
     user: {
       _id: req.user._id,
       name: req.user.name,
@@ -16,5 +20,40 @@ router.get('/me', protect, (req, res) => {
     },
   });
 });
+
+// ═══════════════════════════════════════════════════════════════
+//  Google OAuth — Passport redirect flow
+//  GET /api/auth/google?role=user|owner|admin
+//  GET /api/auth/google/callback
+// ═══════════════════════════════════════════════════════════════
+
+router.get(
+  '/google',
+  authLimiter,
+  (req, res, next) => {
+    const role = req.query.role || 'user';
+    passport.authenticate('google', {
+      scope: ['profile', 'email'],
+      state: role, // pass requested role to the strategy
+      prompt: 'select_account',
+    })(req, res, next);
+  },
+);
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: `${config.CLIENT_ORIGIN}/login?error=google_failed` }),
+  (req, res) => {
+    // req.user is set by Passport after successful verification
+    const token = generateToken(req.user._id, req.user.roles);
+
+    res.cookie('token', token, config.COOKIE_OPTIONS);
+
+    // Redirect to frontend with token (frontend reads it from cookie or URL)
+    const role = req.user.roles.includes('admin') ? 'admin' : req.user.roles.includes('owner') ? 'owner' : 'user';
+    const redirectPath = role === 'admin' ? '/admin/dashboard' : '/dashboard';
+    res.redirect(`${config.CLIENT_ORIGIN}${redirectPath}?token=${token}`);
+  },
+);
 
 module.exports = router;

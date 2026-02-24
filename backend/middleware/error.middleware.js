@@ -1,5 +1,9 @@
-const errorHandler = (err, req, res, next) => {
-  // Default to 500 if no status code set
+const config = require('../config');
+
+/**
+ * Centralized error handler — must be the LAST middleware registered.
+ */
+const errorHandler = (err, req, res, _next) => {
   let statusCode = err.statusCode || (res.statusCode >= 400 ? res.statusCode : 500);
 
   // Mongoose validation error
@@ -30,10 +34,15 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ success: false, message: 'Token expired' });
   }
 
+  // Multer file-size error
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ success: false, message: 'File too large (max 5 MB)' });
+  }
+
   res.status(statusCode).json({
     success: false,
     message: err.message || 'Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(!config.IS_PRODUCTION && { stack: err.stack }),
   });
 };
 

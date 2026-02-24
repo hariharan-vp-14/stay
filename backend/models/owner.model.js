@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const config = require('../config');
 
 const ownerSchema = new mongoose.Schema({
   name: {
@@ -49,8 +50,8 @@ ownerSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 ownerSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ _id: this._id, roles: ['owner'] }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+  return jwt.sign({ _id: this._id, roles: ['owner'] }, config.JWT_SECRET, {
+    expiresIn: config.JWT_EXPIRES_IN,
   });
 };
 

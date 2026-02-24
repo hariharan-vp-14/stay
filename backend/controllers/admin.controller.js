@@ -1,15 +1,18 @@
+/**
+ * Admin Controller — register, login, Google auth, forgot/reset password,
+ * property moderation, user/owner management, analytics, audit logs
+ */
 const User = require('../models/user.model');
 const Owner = require('../models/owner.model');
 const Property = require('../models/property.model');
 const AuditLog = require('../models/auditLog.model');
-const blackListTokenModel = require('../models/blacklistToken.model');
+const BlacklistToken = require('../models/blacklistToken.model');
 const { validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 const crypto = require('crypto');
+const config = require('../config');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-const MAX_ADMINS = 5;
+const googleClient = new OAuth2Client(config.GOOGLE_CLIENT_ID);
 
 // Helper: log admin action
 async function logAction(adminId, action, targetType, targetId, details = '') {
@@ -32,9 +35,10 @@ module.exports.registerAdmin = async (req, res) => {
 
     // Enforce max admin limit
     const adminCount = await User.countDocuments({ roles: 'admin' });
-    if (adminCount >= MAX_ADMINS) {
+    if (adminCount >= config.MAX_ADMINS) {
       return res.status(403).json({
-        message: `Maximum admin limit (${MAX_ADMINS}) reached.`,
+        success: false,
+        message: `Maximum admin limit (${config.MAX_ADMINS}) reached.`,
       });
     }
 
@@ -63,7 +67,7 @@ module.exports.registerAdmin = async (req, res) => {
     }
 
     const token = user.generateAuthToken();
-    res.cookie('token', token);
+    res.cookie('token', token, config.COOKIE_OPTIONS);
 
     await logAction(user._id, 'ADMIN_REGISTER', 'User', user._id, `Admin registered: ${email}`);
 
@@ -112,7 +116,7 @@ module.exports.loginAdmin = async (req, res) => {
     }
 
     const token = admin.generateAuthToken();
-    res.cookie('token', token);
+    res.cookie('token', token, config.COOKIE_OPTIONS);
 
     await logAction(admin._id, 'ADMIN_LOGIN', 'User', admin._id, `Admin login: ${email}`);
 
@@ -134,20 +138,28 @@ module.exports.loginAdmin = async (req, res) => {
 // ─── ADMIN GOOGLE LOGIN ───
 module.exports.googleAuthAdmin = async (req, res) => {
   try {
-    const { idToken } = req.body;
+    // Accept both field names: "token" (preferred) and "idToken" (legacy)
+    const idToken = req.body.token || req.body.idToken;
 
     if (!idToken) {
-      return res.status(400).json({ message: 'idToken is required' });
+      return res.status(400).json({ success: false, message: 'Google token is required (send as "token" or "idToken")' });
     }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload) {
-      return res.status(401).json({ message: 'Invalid Google token' });
+    // Verify the Google ID token
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: config.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyErr) {
+      console.error('[googleAuth-admin] verifyIdToken FAILED:', verifyErr.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Google token verification failed',
+        error: verifyErr.message,
+      });
     }
 
     const googleId = payload.sub;
@@ -155,7 +167,7 @@ module.exports.googleAuthAdmin = async (req, res) => {
     const name = payload.name || email?.split('@')[0];
 
     if (!email) {
-      return res.status(400).json({ message: 'Email not available from Google' });
+      return res.status(400).json({ success: false, message: 'Email not available from Google' });
     }
 
     let user = await User.findOne({ email });
@@ -165,9 +177,10 @@ module.exports.googleAuthAdmin = async (req, res) => {
       if (!user.hasRole('admin')) {
         // Check admin limit before promoting
         const adminCount = await User.countDocuments({ roles: 'admin' });
-        if (adminCount >= MAX_ADMINS) {
+        if (adminCount >= config.MAX_ADMINS) {
           return res.status(403).json({
-            message: `Maximum admin limit (${MAX_ADMINS}) reached.`,
+            success: false,
+            message: `Maximum admin limit (${config.MAX_ADMINS}) reached.`,
           });
         }
         user.roles.push('admin');
@@ -184,9 +197,10 @@ module.exports.googleAuthAdmin = async (req, res) => {
     } else {
       // New user — check admin limit
       const adminCount = await User.countDocuments({ roles: 'admin' });
-      if (adminCount >= MAX_ADMINS) {
+      if (adminCount >= config.MAX_ADMINS) {
         return res.status(403).json({
-          message: `Maximum admin limit (${MAX_ADMINS}) reached.`,
+          success: false,
+          message: `Maximum admin limit (${config.MAX_ADMINS}) reached.`,
         });
       }
 
@@ -203,7 +217,7 @@ module.exports.googleAuthAdmin = async (req, res) => {
     }
 
     const token = user.generateAuthToken();
-    res.cookie('token', token);
+    res.cookie('token', token, config.COOKIE_OPTIONS);
 
     await logAction(user._id, 'ADMIN_LOGIN', 'User', user._id, `Admin Google login: ${email}`);
 
@@ -218,21 +232,22 @@ module.exports.googleAuthAdmin = async (req, res) => {
       },
     });
   } catch (err) {
-    return res.status(401).json({ message: 'Google authentication failed', error: err.message });
+    console.error('Google Auth Error (admin):', err.message);
+    return res.status(401).json({ success: false, message: 'Google authentication failed', error: err.message });
   }
 };
 
 // ─── ADMIN LOGOUT ───
 module.exports.logoutAdmin = async (req, res) => {
   try {
-    res.clearCookie('token');
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
     if (token) {
-      await blackListTokenModel.create({ token });
+      await BlacklistToken.create({ token });
     }
-    return res.status(200).json({ message: 'Logged out' });
+    res.clearCookie('token', { httpOnly: true, secure: config.IS_PRODUCTION, sameSite: config.IS_PRODUCTION ? 'none' : 'lax' });
+    return res.status(200).json({ success: true, message: 'Logged out' });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -514,14 +529,19 @@ module.exports.forgotPassword = async (req, res) => {
     const resetToken = user.generateResetToken();
     await user.save({ validateBeforeSave: false });
 
-    // In production you'd email this link; for now return the token directly
-    const resetUrl = `${process.env.CLIENT_ORIGIN || 'http://localhost:5173'}/admin/reset-password/${resetToken}`;
+    const resetUrl = `${config.CLIENT_ORIGIN}/admin/reset-password/${resetToken}`;
 
-    return res.status(200).json({
+    // In production, send via email; in dev, return directly
+    const responseData = {
+      success: true,
       message: 'Reset token generated successfully',
-      resetToken,   // remove in production & send via email instead
-      resetUrl,     // remove in production
-    });
+    };
+    if (!config.IS_PRODUCTION) {
+      responseData.resetToken = resetToken;
+      responseData.resetUrl = resetUrl;
+    }
+
+    return res.status(200).json(responseData);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

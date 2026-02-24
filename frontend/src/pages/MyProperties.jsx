@@ -85,10 +85,25 @@ export default function MyProperties() {
 
                 {/* Details */}
                 <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
                       {p.type}
                     </span>
+                    {p.status === 'pending' && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                        Pending Approval
+                      </span>
+                    )}
+                    {p.status === 'rejected' && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                        Rejected
+                      </span>
+                    )}
+                    {p.status === 'approved' && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                        Approved
+                      </span>
+                    )}
                     {!p.available && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
                         Unavailable

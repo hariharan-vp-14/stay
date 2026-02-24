@@ -121,7 +121,7 @@ export default function AddProperty() {
 
     const res = await api.post('/upload/images', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined,       // let axios auto-set multipart boundary
         Authorization: `Bearer ${token}`,
       },
     });
