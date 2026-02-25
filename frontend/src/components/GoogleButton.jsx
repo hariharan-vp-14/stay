@@ -27,10 +27,11 @@ export default function GoogleButton({ role = "user" }) {
       // ✅ Send the Google credential (ID token) to backend for verification
       const payload = {
         token: credentialResponse.credential,
+        role,   // backend dispatches to the correct controller based on role
       };
 
-      // ✅ Correct backend endpoint
-      const endpoint = role === 'admin' ? '/admin/google-login' : `/${role}s/google-login`;
+      // ✅ Unified auth endpoint — works for user, owner, and admin
+      const endpoint = '/auth/google-login';
 
       const data = await apiRequest(endpoint, {
         method: "POST",

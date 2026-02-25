@@ -6,6 +6,11 @@ const { protect } = require('../middleware/auth.middleware');
 const { authLimiter } = require('../middleware/security.middleware');
 const generateToken = require('../utils/generateToken');
 
+// Google ID-token controllers (per-role)
+const { googleAuth: googleAuthUser } = require('../controllers/user.controller');
+const { googleAuth: googleAuthOwner } = require('../controllers/owner.controller');
+const { googleAuthAdmin } = require('../controllers/admin.controller');
+
 // ── GET /api/auth/me — returns logged-in user with roles ──
 router.get('/me', protect, (req, res) => {
   return res.status(200).json({
@@ -55,5 +60,24 @@ router.get(
     res.redirect(`${config.CLIENT_ORIGIN}${redirectPath}?token=${token}`);
   },
 );
+
+// ═══════════════════════════════════════════════════════════════
+//  POST /api/auth/google-login
+//  Unified Google ID-token login — dispatches to the correct
+//  controller based on the "role" field in the request body.
+//  Body: { token: "<Google ID token>", role: "user"|"owner"|"admin" }
+// ═══════════════════════════════════════════════════════════════
+router.post('/google-login', authLimiter, (req, res, next) => {
+  const role = (req.body.role || 'user').toLowerCase();
+
+  switch (role) {
+    case 'owner':
+      return googleAuthOwner(req, res, next);
+    case 'admin':
+      return googleAuthAdmin(req, res, next);
+    default:
+      return googleAuthUser(req, res, next);
+  }
+});
 
 module.exports = router;
