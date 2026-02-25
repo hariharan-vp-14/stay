@@ -24,39 +24,84 @@ const app = express();
 // ── Connect to MongoDB ──
 connectDB();
 
-// ── Trust proxy (required for Render / Heroku / load balancers) ──
+// ── Trust proxy (Render / Heroku / Load Balancers) ──
 if (config.IS_PRODUCTION) {
   app.set('trust proxy', 1);
 }
 
-// ── CORS (must be before security middleware for preflight OPTIONS) ──
-app.use(
-  cors({
-    origin: config.CLIENT_ORIGIN,
-    credentials: true,
-  }),
-);
+/* =========================================================
+   CORS CONFIGURATION (Production Safe)
+========================================================= */
 
-// ── Security middleware (helmet, rate-limiter, mongo-sanitize) ──
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://stay-wm8p.vercel.app"
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+// Apply CORS before everything
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+/* =========================================================
+   SECURITY MIDDLEWARE
+========================================================= */
+
 applySecurity(app);
 
-// ── Body parsers & cookies ──
+/* =========================================================
+   BODY PARSERS & COOKIES
+========================================================= */
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ── Passport (for Google OAuth redirect flow) ──
+/* =========================================================
+   PASSPORT (Google OAuth)
+========================================================= */
+
 app.use(passport.initialize());
 
-// ── Static files ──
+/* =========================================================
+   STATIC FILES
+========================================================= */
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ── Health check ──
+/* =========================================================
+   HEALTH CHECK
+========================================================= */
+
 app.get('/', (_req, res) => {
-  res.json({ success: true, message: 'API is running', env: config.NODE_ENV });
+  res.json({
+    success: true,
+    message: 'API is running',
+    env: config.NODE_ENV
+  });
 });
 
-// ── API routes ──
+/* =========================================================
+   API ROUTES
+========================================================= */
+
 app.use('/api/users', userRoutes);
 app.use('/api/owners', ownerRoutes);
 app.use('/api/auth', authRoutes);
@@ -67,12 +112,21 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ── 404 handler ──
+/* =========================================================
+   404 HANDLER
+========================================================= */
+
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Route not found: ${req.originalUrl}` });
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.originalUrl}`
+  });
 });
 
-// ── Centralized error handler (must be last) ──
+/* =========================================================
+   GLOBAL ERROR HANDLER
+========================================================= */
+
 app.use(errorHandler);
 
 module.exports = app;

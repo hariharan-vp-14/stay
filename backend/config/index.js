@@ -30,9 +30,14 @@ module.exports = {
       : 'http://localhost:5000/api/auth/google/callback'),
 
   // ── CORS ──
+  FRONTEND_URL:
+    process.env.FRONTEND_URL ||
+    (isProduction ? 'https://stay-wm8p.vercel.app' : 'http://localhost:5173'),
+  // Kept for backward-compat; prefer FRONTEND_URL
   CLIENT_ORIGIN:
+    process.env.FRONTEND_URL ||
     process.env.CLIENT_ORIGIN ||
-    (isProduction ? 'https://your-frontend-domain.com' : 'http://localhost:5173'),
+    (isProduction ? 'https://stay-wm8p.vercel.app' : 'http://localhost:5173'),
 
   // ── Cookies ──
   COOKIE_OPTIONS: {
